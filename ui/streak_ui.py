@@ -14,46 +14,73 @@ from backend.streak_migration import update_scholar_streak, DB_PATH
 # ── CSS injected once ────────────────────────────────────────────────────────
 STREAK_CSS = """
 <style>
+@keyframes streak-pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(123,47,255,0.3); }
+    50%       { box-shadow: 0 0 35px rgba(123,47,255,0.65), 0 0 60px rgba(123,47,255,0.15); }
+}
+@keyframes milestone-glow {
+    from { box-shadow: 0 0 20px rgba(26,188,156,0.35); }
+    to   { box-shadow: 0 0 45px rgba(26,188,156,0.75), 0 0 80px rgba(26,188,156,0.2); }
+}
+
 /* Streak banner */
 .streak-banner {
-    background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 60%, #0d0d1a 100%);
-    border: 1px solid #7b2fff;
-    border-radius: 12px;
-    padding: 18px 24px;
-    margin: 12px 0;
+    background: linear-gradient(135deg, #05030f 0%, #0f0c22 50%, #08051a 100%);
+    border: 1px solid rgba(123,47,255,0.35);
+    border-radius: 14px;
+    padding: 16px 22px;
+    margin: 10px 0;
     text-align: center;
-    box-shadow: 0 0 18px rgba(123, 47, 255, 0.35);
+    animation: streak-pulse 3s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
 }
-.streak-banner h2 { color: #e8d5ff; margin: 0 0 4px 0; font-size: 1.5rem; }
-.streak-banner p  { color: #a98fd4; margin: 0; font-size: 0.9rem; }
+.streak-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(123,47,255,0.6), transparent);
+}
+.streak-banner h2 {
+    color: #c8a8ff;
+    margin: 0 0 4px 0;
+    font-size: 1.35rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.06em;
+}
+.streak-banner p { color: #7b5fa8; margin: 0; font-size: 0.82rem; }
 
 /* Milestone popup */
 .milestone-popup {
-    background: linear-gradient(135deg, #0d1f0d 0%, #1a3a1a 100%);
-    border: 2px solid #39ff14;
-    border-radius: 14px;
+    background: linear-gradient(135deg, #030f08 0%, #081a10 100%);
+    border: 2px solid rgba(26,188,156,0.6);
+    border-radius: 16px;
     padding: 22px 28px;
     text-align: center;
-    box-shadow: 0 0 28px rgba(57, 255, 20, 0.4);
-    animation: pulse-green 1.5s ease-in-out infinite alternate;
+    animation: milestone-glow 1.5s ease-in-out infinite alternate;
+    position: relative;
+    overflow: hidden;
 }
-@keyframes pulse-green {
-    from { box-shadow: 0 0 20px rgba(57, 255, 20, 0.3); }
-    to   { box-shadow: 0 0 40px rgba(57, 255, 20, 0.7); }
+.milestone-popup::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #1abc9c, transparent);
 }
-.milestone-popup h1 { color: #39ff14; font-size: 2.5rem; margin: 0; }
-.milestone-popup h3 { color: #c8ffb0; margin: 6px 0 2px 0; }
-.milestone-popup p  { color: #7dff5c; margin: 0; font-size: 0.9rem; }
+.milestone-popup h1 { color: #1abc9c; font-size: 2.5rem; margin: 0; }
+.milestone-popup h3 { color: #a0ffe8; margin: 6px 0 2px 0; font-family: 'Cinzel', serif; }
+.milestone-popup p  { color: #5dffd8; margin: 0; font-size: 0.85rem; }
 
 /* Freeze notice */
 .freeze-banner {
-    background: #0d1a2e;
-    border: 1px solid #2255aa;
+    background: #030814;
+    border: 1px solid rgba(34,85,170,0.4);
     border-radius: 10px;
     padding: 12px 18px;
     text-align: center;
-    color: #88aadd;
-    font-size: 0.9rem;
+    color: #6688cc;
+    font-size: 0.85rem;
 }
 
 /* Compact streak badge in sidebar */
@@ -61,13 +88,14 @@ STREAK_CSS = """
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #1a0a2e;
-    border: 1px solid #5a2fa8;
+    background: linear-gradient(135deg, #0a0618, #0f0c22);
+    border: 1px solid rgba(123,47,255,0.35);
     border-radius: 20px;
     padding: 6px 14px;
-    color: #d0b0ff;
-    font-size: 0.95rem;
+    color: #c8a8ff;
+    font-size: 0.88rem;
     font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 /* Milestone road */
@@ -80,12 +108,17 @@ STREAK_CSS = """
 }
 .milestone-node {
     text-align: center;
-    opacity: 0.4;
-    transition: opacity 0.3s;
+    opacity: 0.25;
+    transition: opacity 0.4s, transform 0.3s;
 }
-.milestone-node.unlocked { opacity: 1; }
-.milestone-node span { display: block; font-size: 1.4rem; }
-.milestone-node small { color: #a98fd4; font-size: 0.7rem; }
+.milestone-node.unlocked { opacity: 1; transform: scale(1.05); }
+.milestone-node span { display: block; font-size: 1.3rem; }
+.milestone-node small {
+    color: #5a3a8a;
+    font-size: 0.65rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+}
 </style>
 """
 

@@ -12,18 +12,31 @@ apply_streak_migration()
 from backend.quest_generator import generate_quest, validate_quest
 from ui.streak_ui import handle_login_streak, render_streak_panel, render_streak_badge
 from backend.chronicler_prompts import build_chat_messages
-from ui.theme import inject_theme, page_header, rpg_card, notification_toast
+from ui.theme import (
+    inject_theme, page_header, rpg_card, notification_toast,
+    xp_bar, stat_pill, quest_scroll, scholar_hero_card,
+    challenge_arena, sidebar_scholar_panel, results_trophy,
+    login_atmosphere, npc_dialogue, rune_divider, ambient_bg
+)
+from ui.language_selector import render_language_selector
+from backend.translations import (
+    t, translated_theme_options, translated_difficulty_options,
+    theme_display_to_english, difficulty_display_to_english,
+)
 
-inject_theme()
-
-# ── Init ──────────────────────────────────────────────────────
-init_db()
-
+# ── App config ────────────────────────────────────────────────
 st.set_page_config(
     page_title="The Chronicler's Academy",
     page_icon="🔮",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
+
+inject_theme()
+ambient_bg()
+
+# ── Init ──────────────────────────────────────────────────────
+init_db()
 
 # ── Session state ─────────────────────────────────────────────
 defaults = {
@@ -51,34 +64,67 @@ def go_to(page):
     st.rerun()
 
 def calculate_xp(score, total, hints_used):
-    xp = 50  # completion bonus
-    xp += score * 30  # per correct answer
+    xp = 50
+    xp += score * 30
     if hints_used == 0:
-        xp += 20  # no hints bonus
+        xp += 20
     if score == total:
-        xp += 50  # perfect score bonus
+        xp += 50
     return xp
 
+def _build_sidebar(scholar):
+    """Render persistent sidebar for logged-in scholars."""
+    from backend.translations import t
+
+    rank_info = get_rank_info(scholar["rank"])
+    with st.sidebar:
+        sidebar_scholar_panel(scholar, rank_info)
+        rune_divider()
+        st.markdown(
+            f'<div style="font-family:\'Cinzel\',serif;color:#5a4830;font-size:0.65rem;'
+            f'letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.5rem;">{t("sidebar_navigation")}</div>',
+            unsafe_allow_html=True
+        )
+        if st.button(t("nav_academy"), use_container_width=True, key="nav_academy"):
+            go_to("academy")
+        if st.button(t("nav_new_dimension"), use_container_width=True, key="nav_upload"):
+            st.session_state.lesson_text = ""
+            st.session_state.pdf_name = ""
+            st.session_state.quest = None
+            st.session_state.chat_messages = []
+            go_to("upload")
+        if st.button(t("nav_archive"), use_container_width=True, key="nav_archive"):
+            go_to("archive")
+        rune_divider()
+        if st.button(t("nav_logout"), use_container_width=True,
+                     type="secondary", key="nav_logout"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+            
 # ── Pages ─────────────────────────────────────────────────────
 
 def page_login():
-    #st.title("🔮 The Chronicler's Academy")
-    page_header("The Academy", subtitle="Where legends are forged", icon="🏛")
-    st.markdown("*Where knowledge becomes legend.*")
-    st.divider()
-
-    tab1, tab2 = st.tabs(["🧙 Returning Scholar", "✨ New Scholar"])
-
+    render_language_selector()
+    login_atmosphere()
+ 
+    tab1, tab2 = st.tabs([t("tab_returning"), t("tab_new")])
+ 
     with tab1:
-        st.subheader("Welcome back, Scholar.")
+        st.markdown(
+            f'<p style="color:#8a7050;font-size:0.82rem;letter-spacing:0.04em;'
+            f'font-family:\'Cinzel\',serif;margin-bottom:1rem;">{t("welcome_back")}</p>',
+            unsafe_allow_html=True
+        )
         with st.form("login_form"):
-            name = st.text_input("Your scholar name")
-            pin = st.text_input("Your PIN", type="password", max_chars=4)
-            submitted = st.form_submit_button("Enter the Academy ➡️",
+            name = st.text_input(t("label_scholar_name"), placeholder="...")
+            pin  = st.text_input(t("label_pin"), type="password", max_chars=4,
+                                 placeholder="••••")
+            submitted = st.form_submit_button(t("btn_enter_academy"),
                                               use_container_width=True)
             if submitted:
                 if not name or not pin:
-                    st.error("Please enter both your name and PIN.")
+                    notification_toast(t("error_name_pin_required"), kind="warning")
                 else:
                     scholar = get_scholar(name, pin)
                     if scholar:
@@ -86,45 +132,35 @@ def page_login():
                         handle_login_streak(scholar)
                         go_to("academy")
                     else:
-                        st.error("Scholar not found. Check your name and PIN.")
-
+                        notification_toast(t("error_scholar_not_found"), kind="danger")
+ 
     with tab2:
-        st.subheader("Begin your journey.")
+        st.markdown(
+            f'<p style="color:#8a7050;font-size:0.82rem;letter-spacing:0.04em;'
+            f'font-family:\'Cinzel\',serif;margin-bottom:1rem;">{t("begin_journey")}</p>',
+            unsafe_allow_html=True
+        )
         with st.form("register_form"):
-            name = st.text_input("Choose your scholar name")
-            pin = st.text_input("Choose a 4-digit PIN",
-                                type="password", max_chars=4)
-            pin2 = st.text_input("Confirm your PIN",
-                                 type="password", max_chars=4)
-
-            theme = st.selectbox("⚔️ Favorite theme", [
-                "Space exploration", "Fantasy / Magic",
-                "Mystery / Detective", "Sports",
-                "Anime / Manga", "Superheroes",
-                "Horror / Survival", "Historical adventure"
-            ])
-            difficulty = st.select_slider(
-                "⚡ Difficulty",
-                options=["Easy", "Medium", "Hard"]
-            )
-            interests = st.text_input(
-                "❤️ Your interests",
-                placeholder="e.g. soccer, anime, coding, music..."
-            )
-            want_quiz = st.checkbox(
-                "🎯 Answer a few extra questions for better personalization"
-            )
-            submitted = st.form_submit_button("Create Scholar ✨",
-                                              use_container_width=True)
+            name       = st.text_input(t("label_choose_name"), placeholder="...")
+            pin        = st.text_input(t("label_choose_pin"), type="password", max_chars=4)
+            pin2       = st.text_input(t("label_confirm_pin"), type="password", max_chars=4)
+            theme_display = st.selectbox(t("label_theme"), translated_theme_options())
+            difficulty_display = st.select_slider(t("label_difficulty"), options=translated_difficulty_options())
+            interests  = st.text_input(t("label_interests"),
+                                       placeholder=t("placeholder_interests"))
+            want_quiz  = st.checkbox(t("label_want_quiz"))
+            submitted  = st.form_submit_button(t("btn_create_scholar"), use_container_width=True)
             if submitted:
+                theme = theme_display_to_english(theme_display)
+                difficulty = difficulty_display_to_english(difficulty_display)
                 if not name:
-                    st.error("Please choose a scholar name.")
+                    notification_toast(t("error_choose_name"), kind="warning")
                 elif not pin or len(pin) != 4 or not pin.isdigit():
-                    st.error("PIN must be exactly 4 digits.")
+                    notification_toast(t("error_pin_length"), kind="warning")
                 elif pin != pin2:
-                    st.error("PINs don't match.")
+                    notification_toast(t("error_pin_mismatch"), kind="danger")
                 elif name_exists(name):
-                    st.error("That name is already taken. Choose another.")
+                    notification_toast(t("error_name_taken"), kind="danger")
                 else:
                     st.session_state._new_scholar_data = {
                         "name": name, "pin": pin,
@@ -136,7 +172,7 @@ def page_login():
                         go_to("quiz")
                     else:
                         data = st.session_state._new_scholar_data
-                        scholar_id = create_scholar(
+                        create_scholar(
                             data["name"], data["pin"],
                             data["theme"], data["difficulty"],
                             data["interests"]
@@ -145,191 +181,187 @@ def page_login():
                         st.session_state.scholar = scholar
                         go_to("academy")
 
-
 def page_quiz():
-    page_header("Personalization Quiz", subtitle="A few questions to shape your journey", icon="🎯")
-    st.write("A few quick questions to make your journey more personal!")
+    from backend.translations import t, translated_quiz_options, quiz_display_to_english
+
+    page_header(t("quiz_title"), subtitle=t("quiz_subtitle"), icon="🎯")
+
+    rune_divider(t("quiz_divider"))
 
     with st.form("quiz_form"):
-        q1 = st.radio("When facing a challenge, you prefer to:", [
-            "🧩 Solve a puzzle", "⚔️ Fight an enemy",
-            "🗣️ Talk your way through", "🏃 Explore and discover"
-        ])
-        q2 = st.radio("Your ideal reward is:", [
-            "🏆 A prestigious title", "✨ Powerful new abilities",
-            "📖 Discovering a secret", "👥 Helping your team"
-        ])
-        q3 = st.radio("You prefer quests that are:", [
-            "⚡ Fast and action-packed", "🧠 Deep and thought-provoking",
-            "😂 Fun and lighthearted", "😱 Tense and mysterious"
-        ])
-        q4 = st.radio("Your hero style is:", [
-            "🧙 Wise wizard", "🗡️ Brave warrior",
-            "🕵️ Clever rogue", "💚 Supportive healer"
-        ])
-        submitted = st.form_submit_button("Begin my journey ➡️",
-                                          use_container_width=True)
+        q1 = st.radio(t("quiz_q1"), translated_quiz_options("q1"))
+        q2 = st.radio(t("quiz_q2"), translated_quiz_options("q2"))
+        q3 = st.radio(t("quiz_q3"), translated_quiz_options("q3"))
+        q4 = st.radio(t("quiz_q4"), translated_quiz_options("q4"))
+        submitted = st.form_submit_button(t("btn_seal_path"), use_container_width=True)
         if submitted:
+            # Convert displayed (translated) answers back to English for storage
+            q1_en = quiz_display_to_english("q1", q1)
+            q2_en = quiz_display_to_english("q2", q2)
+            q3_en = quiz_display_to_english("q3", q3)
+            q4_en = quiz_display_to_english("q4", q4)
+
             data = st.session_state._new_scholar_data
             interests_enriched = (
-                f"{data['interests']}, play style: {q1}, "
-                f"hero type: {q4}, quest style: {q3}"
+                f"{data['interests']}, play style: {q1_en}, "
+                f"hero type: {q4_en}, quest style: {q3_en}"
             )
-            scholar_id = create_scholar(
+            create_scholar(
                 data["name"], data["pin"],
                 data["theme"], data["difficulty"],
                 interests_enriched,
-                play_style=q1, hero_type=q4,
-                quest_style=q3, reward_preference=q2
+                play_style=q1_en, hero_type=q4_en,
+                quest_style=q3_en, reward_preference=q2_en
             )
             scholar = get_scholar(data["name"], data["pin"])
             st.session_state.scholar = scholar
             go_to("academy")
 
-
 def page_academy():
-    scholar = st.session_state.scholar
-    rank_info = get_rank_info(scholar["rank"])
-    next_xp = get_xp_for_next_rank(scholar["rank"])
-    dimensions = get_scholar_dimensions(scholar["id"])
-    
-    page_header("The Chronicler's Academy", subtitle=f"Welcome back, {scholar['name']}", icon=rank_info["emoji"])
+    from backend.translations import t
 
-    # Sidebar compact badge
-    with st.sidebar:
-        render_streak_badge(scholar)
+    scholar     = st.session_state.scholar
+    rank_info   = get_rank_info(scholar["rank"])
+    next_xp     = get_xp_for_next_rank(scholar["rank"])
+    dimensions  = get_scholar_dimensions(scholar["id"])
 
-    # Main panel (place near top of page)
+    _build_sidebar(scholar)
+
+    page_header(t("academy_page_title_text"),
+                subtitle=t("welcome_back_name", name=scholar['name']),
+                icon=rank_info["emoji"])
+
+    # Streak panel
     render_streak_panel(scholar)
 
-    # XP Progress bar (now themed)
-    from ui.theme import xp_bar
-    if next_xp:
-        xp_bar(
-            current_xp=scholar["total_xp"],
-            next_threshold=next_xp,
-            rank_title=rank_info["title"],
-            rank_num=scholar["rank"],
-        )
-    else:
-        from ui.theme import notification_toast
-        notification_toast("Maximum rank achieved — Chrono-Legend!", kind="success")
+    # Hero card
+    scholar_hero_card(scholar, rank_info, next_xp or scholar["total_xp"] + 1)
 
-    st.divider()
+    rune_divider(t("rune_divider_begin_journey"))
 
-    # Action buttons
+    # Primary action buttons
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("📜 Enter a new Dimension",
-                     use_container_width=True, type="primary"):
+        if st.button("🌀 " + t("btn_new_dimension_text"),
+                     use_container_width=True, type="primary", key="btn_new_dim"):
             st.session_state.lesson_text = ""
             st.session_state.pdf_name = ""
             st.session_state.quest = None
             st.session_state.chat_messages = []
             go_to("upload")
     with col2:
-        if st.button("📚 Academy Archive",
-                     use_container_width=True):
+        if st.button(t("btn_archive"),
+                     use_container_width=True, key="btn_archive"):
             go_to("archive")
-
-    st.divider()
 
     # Recent dimensions
     if dimensions:
-        st.markdown("### 🌀 Recent Dimensions")
+        rune_divider(t("rune_divider_recent_dimensions"))
         for dim in dimensions[:3]:
+            score_pct = int((dim["score"] / max(dim["total_questions"], 1)) * 100)
+            accent = "gold" if score_pct == 100 else "arcane"
             rpg_card(
                 title=dim["quest_title"],
-                body=f"📄 {dim['pdf_name']}<br>⚡ +{dim['xp_earned']} XP &nbsp;&nbsp; ✅ {dim['score']}/{dim['total_questions']}",
-                accent="arcane",
+                body=(
+                    f'<span style="color:#5a4830;">📄</span> {dim["pdf_name"]}&nbsp;&nbsp;'
+                    f'<span style="color:#5a4830;">·</span>&nbsp;&nbsp;'
+                    f'<span style="color:#7b2fff;">⚡</span> +{dim["xp_earned"]} XP&nbsp;&nbsp;'
+                    f'<span style="color:#5a4830;">·</span>&nbsp;&nbsp;'
+                    f'<span style="color:#c9a84c;">✅</span> {dim["score"]}/{dim["total_questions"]}'
+                ),
+                accent=accent,
             )
     else:
-        from ui.theme import notification_toast
-        notification_toast("No dimensions explored yet. Begin your first journey!", kind="info")
+        rune_divider()
+        notification_toast(t("no_dimensions_long"), kind="info")
         
-    # Logout
-    st.divider()
-    if st.button("🚪 Leave Academy", use_container_width=True):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
-
-
 def page_upload():
     scholar = st.session_state.scholar
-    page_header("A New Dimension Awaits", subtitle="The Chronicler senses a lost tome from another realm", icon="📜")
-    st.divider()
+    _build_sidebar(scholar)
 
-    tab1, tab2 = st.tabs(["📄 Upload PDF", "✏️ Paste text"])
+    page_header("A Tome is Required",
+                subtitle="The Chronicler senses uncharted knowledge nearby",
+                icon="📜")
+
+    tab1, tab2 = st.tabs(["📄 Upload PDF", "✏️ Inscribe Text"])
 
     with tab1:
-        uploaded = st.file_uploader("Upload your lesson PDF", type="pdf")
+        uploaded = st.file_uploader("Drop your lesson tome here", type="pdf",
+                                    label_visibility="collapsed")
         if uploaded:
             import fitz
-            pdf = fitz.open(stream=uploaded.read(), filetype="pdf")
+            pdf  = fitz.open(stream=uploaded.read(), filetype="pdf")
             text = "".join(page.get_text() for page in pdf)
             st.session_state.lesson_text = text
             st.session_state.pdf_name = uploaded.name
-            st.success(f"✅ Tome received! ({len(text)} characters)")
-            st.text_area("Preview:", text[:400] + "...",
-                         height=120, disabled=True)
+            notification_toast(
+                f"Tome received — <strong>{uploaded.name}</strong> ({len(text):,} characters)",
+                kind="success"
+            )
+            with st.expander("📖 Preview tome contents"):
+                st.markdown(
+                    f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.78rem;'
+                    f'color:#8a7050;line-height:1.6;">{text[:500]}…</div>',
+                    unsafe_allow_html=True
+                )
 
     with tab2:
         pasted = st.text_area(
-            "Paste your lesson content:",
-            height=250,
-            placeholder="Paste notes, textbook content, anything..."
+            "Inscribe your lesson:",
+            height=260,
+            placeholder="Paste notes, textbook excerpts, anything worth studying...",
+            label_visibility="collapsed"
         )
         if pasted:
             st.session_state.lesson_text = pasted
-            st.session_state.pdf_name = "Manual entry"
+            st.session_state.pdf_name = "Manual inscription"
 
-    st.divider()
+    rune_divider()
 
     if st.session_state.lesson_text:
-        if st.button("🧙 Consult The Chronicler first",
-                     use_container_width=True):
-            go_to("chronicler")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🧙 Consult the Chronicler",
+                         use_container_width=True, key="btn_chat"):
+                go_to("chronicler")
+        with col2:
+            if st.button("⚔️ Generate Quest",
+                         use_container_width=True, type="primary", key="btn_quest"):
+                go_to("generating")
+    else:
+        notification_toast("Upload a tome or inscribe text to continue.", kind="info")
 
-        if st.button("⚔️ Generate Quest directly",
-                     use_container_width=True, type="primary"):
-            go_to("generating")
-
-    if st.button("🏛️ Back to Academy", use_container_width=True):
+    if st.button("🏛️ Back to Academy", use_container_width=True,
+                 type="secondary", key="btn_back"):
         go_to("academy")
 
 
 def page_chronicler():
-    scholar = st.session_state.scholar
-    st.title("🧙 The Chronicler Speaks")
-
-    # Get rank title for personalization (matches your get_rank_info pattern)
+    scholar   = st.session_state.scholar
     rank_info = get_rank_info(scholar["rank"])
+    _build_sidebar(scholar)
 
-    # Display chat history
+    page_header("The Chronicler Speaks",
+                subtitle="Ancient wisdom, barely concealed impatience",
+                icon="🧙")
+
+    # Chat history
     for msg in st.session_state.chat_messages:
-        role = msg["role"]
+        role   = msg["role"]
         avatar = "🧙" if role == "assistant" else "🎓"
         with st.chat_message(role, avatar=avatar):
             st.write(msg["content"])
 
-    # Chat input
     user_input = st.chat_input("Ask The Chronicler...")
 
     if user_input:
-        st.session_state.chat_messages.append({
-            "role": "user",
-            "content": user_input
-        })
+        st.session_state.chat_messages.append({"role": "user", "content": user_input})
 
         from groq import Groq
         import os
         from dotenv import load_dotenv
         load_dotenv()
-
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
-        from backend.chronicler_prompts import build_chat_messages
 
         system_prompt, chat_msgs = build_chat_messages(
             scholar=scholar,
@@ -338,52 +370,59 @@ def page_chronicler():
             rank_title=rank_info["title"],
             lesson_text=st.session_state.lesson_text,
         )
-
         messages = [{"role": "system", "content": system_prompt}] + chat_msgs
-
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.85,
             max_tokens=600,
         )
-
         reply = response.choices[0].message.content
-        st.session_state.chat_messages.append({
-            "role": "assistant",
-            "content": reply
-        })
+        st.session_state.chat_messages.append({"role": "assistant", "content": reply})
         st.rerun()
 
-    st.divider()
-    if st.button("⚔️ I'm ready — Generate my Quest!",
-                 use_container_width=True, type="primary"):
-        go_to("generating")
+    rune_divider()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("⚔️ Generate my Quest",
+                     use_container_width=True, type="primary", key="btn_gen"):
+            go_to("generating")
+    with col2:
+        if st.button("📜 Back to Upload",
+                     use_container_width=True, type="secondary", key="btn_back_upload"):
+            go_to("upload")
 
-    if st.button("📜 Back to upload", use_container_width=True):
-        go_to("upload")
 
 def page_generating():
-    st.title("⚔️ Entering the Dimension...")
-    st.markdown("*The Chronicler weaves your quest from the ancient tome...*")
+    page_header("Entering the Dimension",
+                subtitle="The Chronicler weaves your quest from the ancient tome",
+                icon="🌀")
+
+    st.markdown("""
+    <div style="text-align:center;padding:1rem 0;
+                color:#5a4830;font-family:'Cinzel',serif;
+                font-size:0.8rem;letter-spacing:0.1em;animation:gold-shimmer 2s infinite;">
+        ✦ &nbsp; Consulting the arcane records &nbsp; ✦
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.spinner("🔮 Crafting your personalized quest..."):
         try:
             scholar = st.session_state.scholar
             profile = {
-                "name": scholar["name"],
-                "theme": scholar["theme"],
+                "name":       scholar["name"],
+                "theme":      scholar["theme"],
                 "difficulty": scholar["difficulty"],
-                "interests": scholar["interests"],
+                "interests":  scholar["interests"],
             }
             quest = generate_quest(profile, st.session_state.lesson_text)
 
             if validate_quest(quest):
-                st.session_state.quest = quest
+                st.session_state.quest             = quest
                 st.session_state.current_challenge = 0
-                st.session_state.score = 0
-                st.session_state.hints_used = 0
-                st.session_state.answer_submitted = False
+                st.session_state.score             = 0
+                st.session_state.hints_used        = 0
+                st.session_state.answer_submitted  = False
 
                 dim_id = create_dimension(
                     scholar_id=scholar["id"],
@@ -395,138 +434,184 @@ def page_generating():
                 st.session_state.dimension_id = dim_id
                 go_to("quest_intro")
             else:
-                st.error("Quest validation failed. Please try again.")
+                notification_toast("Quest validation failed. Please try again.", kind="danger")
                 time.sleep(2)
                 go_to("upload")
         except Exception as e:
-            st.error(f"Something went wrong: {e}")
-            if st.button("Try again"):
+            notification_toast(f"Something went wrong: {e}", kind="danger")
+            if st.button("🔄 Try again"):
                 go_to("upload")
 
 
 def page_quest_intro():
-    quest = st.session_state.quest
-    from ui.theme import quest_scroll, notification_toast
+    quest   = st.session_state.quest
+    scholar = st.session_state.scholar
+    _build_sidebar(scholar)
 
     quest_scroll(
         title=quest["quest_title"],
         topic=quest["theme"],
-        difficulty=st.session_state.scholar.get("difficulty", "medium").lower(),
+        difficulty=scholar.get("difficulty", "medium").lower(),
         num_questions=len(quest["challenges"]),
     )
 
     notification_toast(quest["story_intro"], kind="info")
-    st.divider()
 
-    st.markdown(f"### 🎯 Your Mission")
-    st.write(quest["learning_objective"])
-    st.divider()
+    rune_divider("Mission Briefing")
 
-    st.markdown(f"### 🗣️ {quest['npc_name']} says:")
-    st.markdown(f"*\"{quest['npc_dialogue']}\"*")
-    st.divider()
+    rpg_card(
+        title="🎯 Learning Objective",
+        body=quest["learning_objective"],
+        accent="gold"
+    )
 
-    st.markdown("### 📋 Quest Objectives")
+    npc_dialogue(
+        npc_name=quest["npc_name"],
+        text=quest["npc_dialogue"]
+    )
+
+    rune_divider("Quest Objectives")
+
     for step in quest["quest_steps"]:
         st.markdown(
-            f"**{step['step_number']}.** {step['title']} "
-            f"— {step['description']}"
+            f'<div style="display:flex;gap:12px;align-items:flex-start;'
+            f'padding:8px 0;border-bottom:1px solid rgba(123,47,255,0.1);">'
+            f'<span style="font-family:\'JetBrains Mono\',monospace;color:#3d1880;'
+            f'font-size:0.75rem;padding-top:2px;min-width:20px;">{step["step_number"]}.</span>'
+            f'<div>'
+            f'<div style="font-family:\'Cinzel\',serif;color:#c9a84c;font-size:0.82rem;'
+            f'letter-spacing:0.04em;">{step["title"]}</div>'
+            f'<div style="color:#8a7050;font-size:0.84rem;margin-top:2px;">{step["description"]}</div>'
+            f'</div></div>',
+            unsafe_allow_html=True
         )
 
-    st.divider()
-    if st.button("⚔️ Begin the Trials!",
-                 use_container_width=True, type="primary"):
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("⚔️ Begin the Trials", use_container_width=True, type="primary"):
         st.session_state.current_challenge = 1
         go_to("challenge")
 
 
 def page_challenge():
-    quest = st.session_state.quest
-    total = len(quest["challenges"])
+    quest   = st.session_state.quest
+    scholar = st.session_state.scholar
+    total   = len(quest["challenges"])
     current = st.session_state.current_challenge
 
     if current > total:
         go_to("results")
         return
 
+    _build_sidebar(scholar)
     challenge = quest["challenges"][current - 1]
 
-    st.title(f"⚔️ Trial {current} of {total}")
-    print(repr(page_header.__module__))
-    st.progress(current / total, text=f"Challenge {current} of {total}")
-    st.divider()
+    # Arena header
+    challenge_arena(challenge["question"], current, total)
 
-    with st.container():
-        st.markdown(f"### ❓ {challenge['question']}")
+    # Answer options
+    answer = st.radio(
+        "Choose your answer:",
+        challenge["options"],
+        key=f"challenge_{current}",
+        disabled=st.session_state.answer_submitted,
+        label_visibility="collapsed",
+    )
 
-        answer = st.radio(
-            "Choose your answer:",
-            challenge["options"],
-            key=f"challenge_{current}",
-            disabled=st.session_state.answer_submitted,
+    # Hint display (persistent if shown)
+    if st.session_state.get("show_hint"):
+        npc_dialogue(
+            npc_name="The Chronicler's Hint",
+            text=challenge["hint"],
+            icon="💡"
         )
 
-    col1, col2 = st.columns(2)
-
-    # ── Not yet submitted: show Submit + Hint ──────────────────────────
     if not st.session_state.answer_submitted:
+        col1, col2 = st.columns([3, 1])
         with col1:
-            if st.button("✅ Submit", use_container_width=True, type="primary"):
+            if st.button("✅ Submit Answer", use_container_width=True,
+                         type="primary", key="btn_submit"):
                 correct = answer == challenge["correct_answer"]
                 st.session_state.last_answer_correct = correct
-                st.session_state.answer_submitted = True
+                st.session_state.answer_submitted    = True
+                st.session_state.show_hint           = False
                 if correct:
                     st.session_state.score += 1
                 st.rerun()
-
         with col2:
-            if st.button("💡 Hint", use_container_width=True):
-                st.warning(f"💡 {challenge['hint']}")
-                st.session_state.hints_used += 1
-
-    # ── Already submitted: show feedback + Next button ─────────────────
+            if st.button("💡 Hint", use_container_width=True, key="btn_hint"):
+                if not st.session_state.get("show_hint"):
+                    st.session_state.hints_used += 1
+                st.session_state.show_hint = True
+                st.rerun()
     else:
         if st.session_state.last_answer_correct:
-            notification_toast(challenge["feedback_correct"], kind="success")
+            notification_toast(
+                f'<strong>✦ Correct!</strong> {challenge["feedback_correct"]}',
+                kind="success"
+            )
         else:
-            notification_toast(challenge["feedback_incorrect"], kind="danger")
-            notification_toast(f"Correct answer: {challenge['correct_answer']}", kind="info")
+            notification_toast(
+                f'<strong>✕ Incorrect.</strong> {challenge["feedback_incorrect"]}',
+                kind="danger"
+            )
+            notification_toast(
+                f'Correct answer: <strong>{challenge["correct_answer"]}</strong>',
+                kind="info"
+            )
 
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("➡️ Next Trial", use_container_width=True, type="primary"):
-            st.session_state.current_challenge += 1
-            st.session_state.answer_submitted = False
+            st.session_state.current_challenge  += 1
+            st.session_state.answer_submitted    = False
             st.session_state.last_answer_correct = None
+            st.session_state.show_hint           = False
             if st.session_state.current_challenge > total:
                 go_to("results")
             else:
                 st.rerun()
 
+
 def page_results():
-    quest = st.session_state.quest
-    scholar = st.session_state.scholar
-    score = st.session_state.score
-    total = len(quest["challenges"])
-    hints = st.session_state.hints_used
+    quest    = st.session_state.quest
+    scholar  = st.session_state.scholar
+    score    = st.session_state.score
+    total    = len(quest["challenges"])
+    hints    = st.session_state.hints_used
     xp_earned = calculate_xp(score, total, hints)
+    perfect   = (score == total)
 
-    # Save to database
-    complete_dimension(
-        st.session_state.dimension_id,
-        score, total, xp_earned, hints
-    )
-    new_total_xp, new_rank = add_xp(scholar["id"], xp_earned)
+    _build_sidebar(scholar)
 
-    # Update session scholar
-    st.session_state.scholar["total_xp"] = new_total_xp
-    st.session_state.scholar["rank"] = new_rank
+    # Save to DB (guard against double-save on rerun)
+    if not st.session_state.get("results_saved"):
+        complete_dimension(
+            st.session_state.dimension_id,
+            score, total, xp_earned, hints
+        )
+        new_total_xp, new_rank = add_xp(scholar["id"], xp_earned)
+        st.session_state.scholar["total_xp"] = new_total_xp
+        st.session_state.scholar["rank"]     = new_rank
+        st.session_state._old_rank           = scholar["rank"]
+        st.session_state._new_rank           = new_rank
+        st.session_state._new_total_xp       = new_total_xp
+        st.session_state.results_saved       = True
+    else:
+        new_rank     = st.session_state._new_rank
+        new_total_xp = st.session_state._new_total_xp
 
     rank_info = get_rank_info(new_rank)
-    old_rank = get_rank_info(scholar["rank"])
+    reward    = quest["reward"]
 
-    st.balloons()
-    page_header("Dimension Conquered!", subtitle=f"Well done, {scholar['name']}!", icon="🏆")
+    if perfect:
+        st.balloons()
 
-    from ui.theme import stat_pill
+    # Trophy card
+    results_trophy(
+        score=score, total=total, xp=xp_earned,
+        badge=reward["badge_name"], perfect=perfect
+    )
+
+    # Stats row
     col1, col2, col3 = st.columns(3)
     with col1:
         stat_pill("Score", f"{score}/{total}", "gold")
@@ -535,66 +620,109 @@ def page_results():
     with col3:
         stat_pill("Hints Used", str(hints), "teal")
 
-    st.divider()
+    rune_divider()
 
-    # Rank up notification
-    if new_rank > scholar["rank"]:
-        st.success(
-            f"🎉 RANK UP! You are now a "
-            f"**{rank_info['emoji']} {rank_info['title']}**!"
+    # Rank-up check
+    old_rank = st.session_state.get("_old_rank", scholar["rank"])
+    if new_rank > old_rank:
+        rpg_card(
+            title=f"🎉 RANK UP — {rank_info['emoji']} {rank_info['title']}",
+            body=f"You have ascended, {scholar['name']}. The Chronicler acknowledges your growth.",
+            accent="gold"
         )
     else:
-        st.info(
-            f"{rank_info['emoji']} Current Rank: "
-            f"**{rank_info['title']}** — {new_total_xp} XP total"
+        notification_toast(
+            f"{rank_info['emoji']} {rank_info['title']} — {new_total_xp} XP total",
+            kind="info"
         )
 
-    st.divider()
+    rune_divider("Your Reward")
 
-    reward = quest["reward"]
-    st.markdown(f"### 🎖️ Badge: **{reward['badge_name']}**")
-    st.write(reward["badge_description"])
-    st.success(reward["completion_message"])
+    rpg_card(
+        title=f"🎖️ {reward['badge_name']}",
+        body=reward["badge_description"],
+        accent="gold",
+        footer=reward["completion_message"]
+    )
 
-    st.divider()
-    st.markdown("### 📚 What you learned")
-    st.write(quest["learning_objective"])
+    rune_divider("Wisdom Gained")
+    rpg_card(
+        title="📚 What you learned",
+        body=quest["learning_objective"],
+        accent="arcane"
+    )
 
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🌀 New Dimension",
-                     use_container_width=True, type="primary"):
-            st.session_state.lesson_text = ""
-            st.session_state.pdf_name = ""
-            st.session_state.quest = None
+                     use_container_width=True, type="primary", key="btn_new"):
+            st.session_state.lesson_text   = ""
+            st.session_state.pdf_name      = ""
+            st.session_state.quest         = None
             st.session_state.chat_messages = []
+            st.session_state.results_saved = False
             go_to("upload")
     with col2:
         if st.button("🏛️ Return to Academy",
-                     use_container_width=True):
+                     use_container_width=True, type="secondary", key="btn_home"):
+            st.session_state.results_saved = False
             go_to("academy")
 
 
 def page_archive():
-    scholar = st.session_state.scholar
+    scholar    = st.session_state.scholar
     dimensions = get_scholar_dimensions(scholar["id"])
+    _build_sidebar(scholar)
 
-    page_header("Academy Archive", subtitle=f"All dimensions conquered by {scholar['name']}", icon="📚")
+    page_header("Academy Archive",
+                subtitle=f"All dimensions conquered by {scholar['name']}",
+                icon="📚")
 
     if not dimensions:
-        from ui.theme import notification_toast
-        notification_toast("No dimensions conquered yet. Begin your journey!", kind="info")
+        notification_toast(
+            "The archive is empty. No dimensions have been conquered yet.", kind="info"
+        )
     else:
+        total_xp     = sum(d["xp_earned"] for d in dimensions)
+        total_correct = sum(d["score"] for d in dimensions)
+        total_q      = sum(d["total_questions"] for d in dimensions)
+
+        # Summary stats
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            stat_pill("Dimensions", str(len(dimensions)), "arcane")
+        with col2:
+            stat_pill("Total XP", str(total_xp), "gold")
+        with col3:
+            accuracy = int((total_correct / max(total_q, 1)) * 100)
+            stat_pill("Accuracy", f"{accuracy}%", "teal")
+
+        rune_divider("Conquered Dimensions")
+
         for dim in dimensions:
+            score_pct = int((dim["score"] / max(dim["total_questions"], 1)) * 100)
+            accent = "gold" if score_pct == 100 else ("arcane" if score_pct >= 60 else "ember")
             rpg_card(
                 title=dim["quest_title"],
-                body=f"📄 {dim['pdf_name']} &nbsp;·&nbsp; 🌀 {dim['subject']}<br>⚡ +{dim['xp_earned']} XP &nbsp;&nbsp; ✅ {dim['score']}/{dim['total_questions']}",
-                accent="gold",
+                body=(
+                    f'<span style="color:#5a4830;">📄</span> {dim["pdf_name"]}'
+                    f'&nbsp;&nbsp;<span style="color:#3d1880;">·</span>&nbsp;&nbsp;'
+                    f'<span style="color:#5a4830;">🌀</span> {dim["subject"]}'
+                    f'<br>'
+                    f'<span style="color:#7b2fff;">⚡</span> +{dim["xp_earned"]} XP'
+                    f'&nbsp;&nbsp;<span style="color:#3d1880;">·</span>&nbsp;&nbsp;'
+                    f'<span style="color:#c9a84c;">✅</span> {dim["score"]}/{dim["total_questions"]}'
+                    f'&nbsp;&nbsp;<span style="color:#3d1880;">·</span>&nbsp;&nbsp;'
+                    f'<span style="color:#5a4830;">{score_pct}%</span>'
+                ),
+                accent=accent,
+                footer=dim["completed_at"][:10] if dim.get("completed_at") else "",
             )
 
-    st.divider()
-    if st.button("🏛️ Back to Academy", use_container_width=True):
+    rune_divider()
+    if st.button("🏛️ Back to Academy",
+                 use_container_width=True, type="secondary"):
         go_to("academy")
 
 

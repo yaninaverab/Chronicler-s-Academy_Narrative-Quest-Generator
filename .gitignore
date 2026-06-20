@@ -1,10 +1,10 @@
 # Virtual environment
 venv/
 
-# Environment variables (NEVER upload this)
+# Environment variables 
 .env
 
-# Database (contains user data)
+# Database of user data
 data/scholars.db
 
 # Python cache

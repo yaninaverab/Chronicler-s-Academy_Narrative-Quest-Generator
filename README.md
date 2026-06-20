@@ -155,6 +155,7 @@ chroniclers-academy/
 ## 🗺️ Roadmap
 
 ### In Progress
+- [ ] Additional Languages Options, Spanish being the priority
 - [ ] Visual polish pass — CSS class system, sidebar nav, mockup parity
 
 ### Planned (v2)

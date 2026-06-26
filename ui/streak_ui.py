@@ -237,8 +237,8 @@ def render_streak_badge(scholar: dict):
     inject_streak_css()
     streak = scholar.get("current_streak", 0)
     icon = get_streak_icon(streak)
-    badge_text = t("streak_badge_label", streak=streak)
-    st.markdown(
-        f'<div class="streak-badge">{icon} {badge_text}</div>',
+    day_word = "día" if streak == 1 else "días"
+    badge_text = f"{icon} {streak} {day_word} de racha"
+    st.markdown(f'<div class="streak-badge">{badge_text}</div>', 
         unsafe_allow_html=True
     )

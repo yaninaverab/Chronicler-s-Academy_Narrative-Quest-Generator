@@ -244,6 +244,8 @@ TRANSLATIONS = {
         "streak_already_today":  "Ya iniciaste sesión hoy. Bien hecho.",
         "streak_milestone_xp":   "+{xp} XP otorgados!",
         "streak_badge_label":    "{streak} días de racha",
+        "day_singular": "día",
+        "day_plural":   "días",
     },
 
     "en": {
@@ -447,6 +449,8 @@ TRANSLATIONS = {
         "streak_already_today":  "You've already logged in today. Well done.",
         "streak_milestone_xp":   "+{xp} XP awarded!",
         "streak_badge_label":    "{streak}-day streak",
+        "day_singular": "day",
+        "day_plural":   "days",
         
         # ── Quiz page ────────────────────────────────────────────────
         "quiz_title": "Personalization Rite",

@@ -161,6 +161,7 @@ THEME_CSS_3 = """
     font-size: 0.82rem !important;
     letter-spacing: 0.04em !important;
 }
+
 [data-testid="stRadio"] label { color: var(--parchment) !important; font-family: var(--font-body) !important; }
 [data-testid="stRadio"] [data-testid="stMarkdownContainer"] p { color: var(--parchment) !important; }
 [data-testid="stRadio"] > label { font-family: var(--font-display) !important; font-size: 0.82rem !important; letter-spacing: 0.04em !important; color: var(--parchment-3) !important; }
@@ -192,7 +193,12 @@ hr { border: none !important; border-top: 1px solid var(--border) !important; ma
 [data-testid="stFileUploader"] { background: var(--void-2) !important; border: 2px dashed var(--border) !important; border-radius: var(--radius-lg) !important; padding: 1.5rem !important; transition: border-color 0.2s !important; }
 [data-testid="stFileUploader"]:hover { border-color: var(--arcane) !important; }
 [data-testid="stFileUploader"] label { color: var(--parchment-3) !important; font-family: var(--font-display) !important; font-size: 0.82rem !important; letter-spacing: 0.04em !important; }
-
+/* Fix file uploader button label doubling */
+[data-testid="stFileUploader"] button span { display: none; }
+[data-testid="stFileUploader"] button::after {
+    content: '📂 Upload';
+    font-family: var(--font-display);
+}
 [data-testid="stChatInput"] textarea { background-color: var(--void-3) !important; border: 1px solid var(--border) !important; color: var(--parchment) !important; border-radius: var(--radius) !important; }
 [data-testid="stChatMessage"] { background: var(--void-2) !important; border: 1px solid var(--border) !important; border-radius: var(--radius-lg) !important; }
 
@@ -365,7 +371,8 @@ def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
         t("max_rank_reached") if not next_xp
         else t("remaining_xp", remaining=remaining)
     )
-    streak_label = t("streak_day_label", streak=streak)
+    day_word = t("day_singular") if streak == 1 else t("day_plural")
+    streak_label = f"🔥 {streak} {day_word} de racha"
     xp_display = t("xp_to_next", xp=xp, next=next_xp_display)
 
     st.markdown(f"""

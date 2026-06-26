@@ -289,7 +289,7 @@ def page_upload():
 
     with tab1:
         uploaded = st.file_uploader(t("label_drop_tome"), type="pdf",
-                                    label_visibility="collapsed")
+                                    label_visibility="hidden")
         if uploaded:
             import fitz
             pdf  = fitz.open(stream=uploaded.read(), filetype="pdf")

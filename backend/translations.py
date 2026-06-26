@@ -233,15 +233,17 @@ TRANSLATIONS = {
         "result_xp_label":          "XP Ganado",
         "xp_to_next_rank_bar":      "{remaining} XP al siguiente rango",
 
-        # ── Quiz page ────────────────────────────────────────────────
-        "quiz_title": "Rito de Personalización",
-        "quiz_subtitle": "El Chronicler lee tu alma",
-        "quiz_divider": "Responde con sinceridad",
-        "quiz_q1": "Al enfrentar un desafío, prefieres:",
-        "quiz_q2": "Tu recompensa ideal es:",
-        "quiz_q3": "Prefieres misiones que sean:",
-        "quiz_q4": "Tu arquetipo de héroe es:",
-        "btn_seal_path": "📜 Sellar mi Camino",
+                
+        # ── streak_ui.py components ──────────────────────────────────
+        "streak_day_count":      "Día {day} de Racha",
+        "streak_day_frozen":     "Día {day} (congelada)",
+        "streak_bonus_xp":       "+{xp} XP de bonus",
+        "streak_keep_going":     "¡Sigue así, Scholar!",
+        "streak_frozen_notice":  "❄️ Período de gracia activo — ¡inicia sesión mañana para mantener tu racha!",
+        "streak_reset_notice":   "Tu racha se ha reiniciado. Comienza de nuevo, Scholar.",
+        "streak_already_today":  "Ya iniciaste sesión hoy. Bien hecho.",
+        "streak_milestone_xp":   "+{xp} XP otorgados!",
+        "streak_badge_label":    "{streak} días de racha",
     },
 
     "en": {
@@ -435,6 +437,17 @@ TRANSLATIONS = {
         "result_xp_label":          "XP Earned",
         "xp_to_next_rank_bar":      "{remaining} XP to next rank",
 
+        # ── streak_ui.py components ──────────────────────────────────
+        "streak_day_count":      "Day {day} Streak",
+        "streak_day_frozen":     "Day {day} (frozen)",
+        "streak_bonus_xp":       "+{xp} XP bonus",
+        "streak_keep_going":     "Keep it up, Scholar!",
+        "streak_frozen_notice":  "❄️ Grace period active — log in tomorrow to keep your streak!",
+        "streak_reset_notice":   "Your streak has been reset. Begin anew, Scholar.",
+        "streak_already_today":  "You've already logged in today. Well done.",
+        "streak_milestone_xp":   "+{xp} XP awarded!",
+        "streak_badge_label":    "{streak}-day streak",
+        
         # ── Quiz page ────────────────────────────────────────────────
         "quiz_title": "Personalization Rite",
         "quiz_subtitle": "The Chronicler reads your soul",

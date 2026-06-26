@@ -79,7 +79,8 @@ h1, h2, h3 {
 h1 { font-size: 2.2rem !important; font-weight: 700 !important; }
 h2 { font-size: 1.5rem !important; font-weight: 600 !important; }
 h3 { font-size: 1.1rem !important; font-weight: 600 !important; }
-p, li, span, label { font-family: var(--font-body) !important; color: var(--parchment) !important; }
+p, li, label { font-family: var(--font-body) !important; color: var(--parchment) !important; }
+span:not([data-testid="stExpander"] summary span) { font-family: var(--font-body) !important; color: var(--parchment) !important; }
 code, pre { font-family: var(--font-mono) !important; color: var(--arcane-2) !important; }
 
 [data-testid="stTextInput"] input,
@@ -184,6 +185,17 @@ hr { border: none !important; border-top: 1px solid var(--border) !important; ma
 ::-webkit-scrollbar-thumb { background: var(--arcane-dim); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--arcane); }
 
+/* Fix expander arrow rendering */
+[data-testid="stExpander"] summary svg {
+    display: inline-block !important;
+    visibility: visible !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--parchment-3) !important;
+}
+[data-testid="stExpander"] summary p {
+    display: inline !important;
+}
 [data-testid="stExpander"] { background: var(--void-2) !important; border: 1px solid var(--border) !important; border-radius: var(--radius) !important; }
 [data-testid="stExpander"] summary { color: var(--parchment) !important; font-family: var(--font-display) !important; font-size: 0.85rem !important; letter-spacing: 0.04em !important; }
 

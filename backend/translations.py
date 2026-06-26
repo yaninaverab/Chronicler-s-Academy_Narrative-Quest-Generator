@@ -246,6 +246,16 @@ TRANSLATIONS = {
         "streak_badge_label":    "{streak} días de racha",
         "day_singular": "día",
         "day_plural":   "días",
+        
+        # ── Streak manager componenets ─────────────────────────────
+        "milestone_ember_badge":     "Guardián de la Llama",
+        "milestone_ember_title":     "La llama se enciende…",
+        "milestone_week_badge":      "Guardián Semanal",
+        "milestone_week_title":      "Siete días de devoción.",
+        "milestone_fortnight_badge": "Forjado en Quincena",
+        "milestone_fortnight_title": "Dos semanas — el archivo se inclina.",
+        "milestone_eternal_badge":   "Chronicler Eterno",
+        "milestone_eternal_title":   "Un mes ininterrumpido. Leyenda.",
     },
 
     "en": {
@@ -477,6 +487,16 @@ TRANSLATIONS = {
         "quiz_q4_opt3": "🕵️ Clever rogue",
         "quiz_q4_opt4": "💚 Supportive healer",
         "btn_seal_path": "📜 Seal my Path",
+        
+        # ── Streak manager componenets ─────────────────────────────
+        "milestone_ember_badge":     "Ember Keeper",
+        "milestone_ember_title":     "The flame ignites…",
+        "milestone_week_badge":      "Week Warden",
+        "milestone_week_title":      "Seven days of devotion.",
+        "milestone_fortnight_badge": "Fortnight Forged",
+        "milestone_fortnight_title": "Two weeks — the archive bows.",
+        "milestone_eternal_badge":   "Eternal Chronicler",
+        "milestone_eternal_title":   "A month unbroken. Legend.",
     },
 }
 

@@ -176,15 +176,30 @@ def render_streak_panel(scholar: dict):
     milestone = result.get("milestone")
     bonus_xp = result.get("bonus_xp", 0)
     icon = get_streak_icon(streak)
-
+    
     # ── Milestone popup (shown once per session) ─────────────────────────
     if milestone and not st.session_state.get("milestone_shown"):
+        badge_keys = {
+            "Ember Keeper":       "milestone_ember_badge",
+            "Week Warden":        "milestone_week_badge",
+            "Fortnight Forged":   "milestone_fortnight_badge",
+            "Eternal Chronicler": "milestone_eternal_badge",
+        }
+        title_keys = {
+            "Ember Keeper":       "milestone_ember_title",
+            "Week Warden":        "milestone_week_title",
+            "Fortnight Forged":   "milestone_fortnight_title",
+            "Eternal Chronicler": "milestone_eternal_title",
+        }
+        milestone_badge = t(badge_keys.get(milestone["badge"], milestone["badge"]))
+        milestone_title = t(title_keys.get(milestone["title"], milestone["title"]))
         xp_awarded_text = t("streak_milestone_xp", xp=milestone["bonus_xp"])
+
         st.markdown(f"""
         <div class="milestone-popup">
             <h1>{milestone['icon']}</h1>
-            <h3>{milestone['badge']}</h3>
-            <p>{milestone['title']}</p>
+            <h3>{milestone_badge}</h3>
+            <p>{milestone_title}</p>
             <p style="margin-top:8px; color:#39ff14; font-weight:600;">
                 {xp_awarded_text}
             </p>
@@ -215,18 +230,21 @@ def render_streak_panel(scholar: dict):
 
     # ── Milestone road ───────────────────────────────────────────────────
     node_parts = []
-    for m in STREAK_MILESTONES:
+    translation_keys = [
+        ("milestone_ember_badge",     "milestone_ember_title"),
+        ("milestone_week_badge",      "milestone_week_title"),
+        ("milestone_fortnight_badge", "milestone_fortnight_title"),
+        ("milestone_eternal_badge",   "milestone_eternal_title"),
+    ]
+    for m, (badge_key, _) in zip(STREAK_MILESTONES, translation_keys):
         unlocked_class = "milestone-node unlocked" if streak >= m["days"] else "milestone-node"
         node_html = (
             f'<div class="{unlocked_class}">'
             f'<span>{m["icon"]}</span>'
-            f'<small>{m["days"]}d<br>{m["badge"]}</small>'
+            f'<small>{m["days"]}d<br>{t(badge_key)}</small>'
             f'</div>'
         )
         node_parts.append(node_html)
-
-    road_html = '<div class="milestone-road">' + "".join(node_parts) + '</div>'
-    st.markdown(road_html, unsafe_allow_html=True)
 
 
 # ── Sidebar: compact streak badge ────────────────────────────────────────────

@@ -344,10 +344,13 @@ def rpg_card(title: str, body: str, accent: str = "arcane", footer: str = "", an
     )
 
     st.markdown(html, unsafe_allow_html=True)
-    
+
+
 # ── Scholar Hero Card ─────────────────────────────────────────────────────────
 def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
     """Large hero card shown on the academy dashboard."""
+    from backend.translations import t
+
     xp = scholar.get("total_xp", 0)
     pct = min(100, int((xp / max(next_xp, 1)) * 100)) if next_xp else 100
     streak = scholar.get("current_streak", 0)
@@ -356,9 +359,14 @@ def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
     rank_colors = {1:"#8a7050", 2:"#7b2fff", 3:"#1abc9c", 4:"#c9a84c", 5:"#c0392b"}
     glow = rank_colors.get(rank_num, "#7b2fff")
 
-    next_xp_display = f"{next_xp} XP" if next_xp else "MAX"
+    next_xp_display = t("max_rank_display") if not next_xp else f"{next_xp} XP"
     remaining = (next_xp - xp) if next_xp else 0
-    remaining_text = f"{remaining} XP to rank up" if next_xp else "Chrono-Legend — Peak reached"
+    remaining_text = (
+        t("max_rank_reached") if not next_xp
+        else t("remaining_xp", remaining=remaining)
+    )
+    streak_label = t("streak_day_label", streak=streak)
+    xp_display = t("xp_to_next", xp=xp, next=next_xp_display)
 
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,#0a0618 0%,#110c24 50%,#0d0a1a 100%);
@@ -398,7 +406,7 @@ def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
                     <span style="background:rgba(123,47,255,0.15);border:1px solid rgba(123,47,255,0.3);
                                  color:#9b7fff;border-radius:20px;padding:3px 12px;
                                  font-size:0.72rem;font-family:'JetBrains Mono',monospace;">
-                        🔥 {streak}-day streak
+                        {streak_label}
                     </span>
                 </div>
             </div>
@@ -408,10 +416,10 @@ def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
                         margin-bottom:6px;align-items:center;">
                 <span style="font-family:'Cinzel',serif;color:#8a7050;
                              font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;">
-                    Rank Progress
+                    {t("rank_progress")}
                 </span>
                 <span style="font-family:'JetBrains Mono',monospace;color:#5a4830;font-size:0.7rem;">
-                    {xp} / {next_xp_display}
+                    {xp_display}
                 </span>
             </div>
             <div style="background:#0d0a1f;border:1px solid {glow}33;
@@ -435,6 +443,8 @@ def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
 # ── XP Bar (standalone, for backward compat) ─────────────────────────────────
 def xp_bar(current_xp: int, next_threshold: int, rank_title: str, rank_num: int):
     """Animated XP progress bar — kept for backward compatibility."""
+    from backend.translations import t
+
     pct = min(100, int((current_xp / max(next_threshold, 1)) * 100))
     remaining = next_threshold - current_xp
     st.markdown(f"""
@@ -455,7 +465,7 @@ def xp_bar(current_xp: int, next_threshold: int, rank_title: str, rank_num: int)
         </div>
         <div style="text-align:right;margin-top:4px;font-size:0.72rem;color:#8a7050;
                     font-family:'JetBrains Mono',monospace;">
-            {remaining} XP to next rank
+            {t("xp_to_next_rank_bar", remaining=remaining)}
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -491,6 +501,8 @@ def stat_pill(label: str, value: str, color: str = "arcane"):
 # ── Quest Scroll ──────────────────────────────────────────────────────────────
 def quest_scroll(title: str, topic: str, difficulty: str, num_questions: int):
     """A sealed scroll card for the quest intro page."""
+    from backend.translations import t
+
     diff_config = {
         "easy":      ("⚗️", "#1abc9c", "Apprentice Trial"),
         "medium":    ("🔮", "#7b2fff", "Seeker's Path"),
@@ -498,6 +510,9 @@ def quest_scroll(title: str, topic: str, difficulty: str, num_questions: int):
         "legendary": ("💀", "#c0392b", "Chrono-Legend"),
     }
     icon, color, label = diff_config.get(difficulty, diff_config["medium"])
+
+    trials_label = f"{num_questions} {t('stat_dimensions')}"  # reuses "Trials/Dimensiones"
+
     st.markdown(f"""
     <div style="background:linear-gradient(160deg,#05030f 0%,#0d0a1f 50%,#08051a 100%);
                 border:1px solid {color}44;border-radius:18px;
@@ -529,7 +544,7 @@ def quest_scroll(title: str, topic: str, difficulty: str, num_questions: int):
             <span style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);
                          color:#c9a84c;border-radius:20px;padding:5px 18px;
                          font-size:0.76rem;font-family:'JetBrains Mono',monospace;">
-                {num_questions} Trials
+                {trials_label}
             </span>
         </div>
         <div style="position:absolute;bottom:0;left:0;right:0;height:2px;
@@ -585,7 +600,12 @@ def challenge_arena(question: str, trial_num: int, total: int):
                 {trial_label}
             </div>
             <div style="display:flex;gap:6px;">
-                {"".join(f'<div style="width:22px;height:4px;border-radius:2px;background:{"#7b2fff" if i < trial_num else "#1e1640"};box-shadow:{"0 0 8px #7b2fff88" if i < trial_num else "none"};"></div>' for i in range(total))}
+                {"".join(
+                    f'<div style="width:22px;height:4px;border-radius:2px;'
+                    f'background:{"#7b2fff" if i < trial_num else "#1e1640"};'
+                    f'box-shadow:{"0 0 8px #7b2fff88" if i < trial_num else "none"};"></div>'
+                    for i in range(total)
+                )}
             </div>
         </div>
         <div style="font-family:'Cinzel',serif;color:#e8d5b0;font-size:1.05rem;
@@ -597,9 +617,12 @@ def challenge_arena(question: str, trial_num: int, total: int):
     </div>
     """, unsafe_allow_html=True)
 
+
 # ── Sidebar Scholar Panel ─────────────────────────────────────────────────────
 def sidebar_scholar_panel(scholar: dict, rank_info: dict):
     """Compact scholar info for the sidebar."""
+    from backend.translations import t
+
     streak = scholar.get("current_streak", 0)
     xp = scholar.get("total_xp", 0)
     rank_num = scholar.get("rank", 1)
@@ -632,7 +655,7 @@ def sidebar_scholar_panel(scholar: dict, rank_info: dict):
                     {xp}
                 </div>
                 <div style="font-size:0.6rem;color:#5a4830;letter-spacing:0.06em;text-transform:uppercase;">
-                    XP
+                    {t("sidebar_xp_label")}
                 </div>
             </div>
             <div style="text-align:center;">
@@ -640,7 +663,7 @@ def sidebar_scholar_panel(scholar: dict, rank_info: dict):
                     🔥 {streak}
                 </div>
                 <div style="font-size:0.6rem;color:#5a4830;letter-spacing:0.06em;text-transform:uppercase;">
-                    Streak
+                    {t("sidebar_streak_label")}
                 </div>
             </div>
             <div style="text-align:center;">
@@ -648,7 +671,7 @@ def sidebar_scholar_panel(scholar: dict, rank_info: dict):
                     {rank_num}/5
                 </div>
                 <div style="font-size:0.6rem;color:#5a4830;letter-spacing:0.06em;text-transform:uppercase;">
-                    Rank
+                    {t("sidebar_rank_label")}
                 </div>
             </div>
         </div>
@@ -659,18 +682,20 @@ def sidebar_scholar_panel(scholar: dict, rank_info: dict):
 # ── Results Trophy Card ───────────────────────────────────────────────────────
 def results_trophy(score: int, total: int, xp: int, badge: str, perfect: bool = False):
     """Grand results card shown on the quest completion screen."""
+    from backend.translations import t
+
     pct = int((score / max(total, 1)) * 100)
     if perfect:
         glow_color = "#c9a84c"
-        title_text = "FLAWLESS VICTORY"
+        title_text = t("result_flawless")
         stars = "★ ★ ★"
     elif pct >= 60:
         glow_color = "#7b2fff"
-        title_text = "DIMENSION CONQUERED"
+        title_text = t("result_conquered")
         stars = "★ ★ ☆"
     else:
         glow_color = "#1abc9c"
-        title_text = "TRIAL COMPLETE"
+        title_text = t("result_complete")
         stars = "★ ☆ ☆"
 
     st.markdown(f"""
@@ -700,7 +725,7 @@ def results_trophy(score: int, total: int, xp: int, badge: str, perfect: bool = 
                     {score}/{total}
                 </div>
                 <div style="font-size:0.68rem;color:#8a7050;letter-spacing:0.1em;text-transform:uppercase;">
-                    Correct
+                    {t("result_correct_label")}
                 </div>
             </div>
             <div>
@@ -708,7 +733,7 @@ def results_trophy(score: int, total: int, xp: int, badge: str, perfect: bool = 
                     +{xp}
                 </div>
                 <div style="font-size:0.68rem;color:#8a7050;letter-spacing:0.1em;text-transform:uppercase;">
-                    XP Earned
+                    {t("result_xp_label")}
                 </div>
             </div>
         </div>
@@ -761,7 +786,8 @@ def login_atmosphere():
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
+
+
 # ── NPC Dialogue Box ──────────────────────────────────────────────────────────
 def npc_dialogue(npc_name: str, text: str, icon: str = "🧙"):
     """Textbox-style NPC dialogue for quest intros and hints."""

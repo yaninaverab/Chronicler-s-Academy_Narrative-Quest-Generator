@@ -9,6 +9,7 @@ import streamlit as st
 from datetime import date
 from backend.streak_manager import compute_streak_update, get_streak_icon, STREAK_MILESTONES
 from backend.streak_migration import update_scholar_streak, DB_PATH
+from backend.translations import t
 
 
 # ── CSS injected once ────────────────────────────────────────────────────────
@@ -178,13 +179,14 @@ def render_streak_panel(scholar: dict):
 
     # ── Milestone popup (shown once per session) ─────────────────────────
     if milestone and not st.session_state.get("milestone_shown"):
+        xp_awarded_text = t("streak_milestone_xp", xp=milestone["bonus_xp"])
         st.markdown(f"""
         <div class="milestone-popup">
             <h1>{milestone['icon']}</h1>
             <h3>{milestone['badge']}</h3>
             <p>{milestone['title']}</p>
             <p style="margin-top:8px; color:#39ff14; font-weight:600;">
-                +{milestone['bonus_xp']} XP awarded!
+                {xp_awarded_text}
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -192,21 +194,21 @@ def render_streak_panel(scholar: dict):
 
     # ── Main streak banner ───────────────────────────────────────────────
     if status == "incremented":
-        subtitle = f"+{bonus_xp} XP bonus" if bonus_xp else "Keep it up, Scholar!"
-        streak_label = f"Day {streak}"
+        subtitle = t("streak_bonus_xp", xp=bonus_xp) if bonus_xp else t("streak_keep_going")
+        streak_label = t("streak_day_count", day=streak)
     elif status == "frozen":
-        subtitle = "❄️ Grace period active — log in tomorrow to keep your streak!"
-        streak_label = f"Day {streak} (frozen)"
+        subtitle = t("streak_frozen_notice")
+        streak_label = t("streak_day_frozen", day=streak)
     elif status == "reset":
-        subtitle = "Your streak has been reset. Begin anew, Scholar."
-        streak_label = "Day 1"
+        subtitle = t("streak_reset_notice")
+        streak_label = t("streak_day_count", day=1)
     else:  # already_today
-        subtitle = "You've already logged in today. Well done."
-        streak_label = f"Day {streak}"
+        subtitle = t("streak_already_today")
+        streak_label = t("streak_day_count", day=streak)
 
     st.markdown(f"""
     <div class="streak-banner">
-        <h2>{icon} {streak_label} Streak</h2>
+        <h2>{icon} {streak_label}</h2>
         <p>{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
@@ -235,7 +237,8 @@ def render_streak_badge(scholar: dict):
     inject_streak_css()
     streak = scholar.get("current_streak", 0)
     icon = get_streak_icon(streak)
+    badge_text = t("streak_badge_label", streak=streak)
     st.markdown(
-        f'<div class="streak-badge">{icon} {streak}-day streak</div>',
+        f'<div class="streak-badge">{icon} {badge_text}</div>',
         unsafe_allow_html=True
     )

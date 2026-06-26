@@ -216,6 +216,23 @@ TRANSLATIONS = {
         "quiz_q4_opt4": "💚 Sanador de apoyo",
         "btn_seal_path": "📜 Sellar mi Camino",
 
+        # ── theme.py components ──────────────────────────────────────
+        "rank_progress":            "Progreso de Rango",
+        "xp_to_next":               "{xp} / {next}",
+        "max_rank_display":         "MÁXIMO",
+        "remaining_xp":             "{remaining} XP para subir de rango",
+        "max_rank_reached":         "Chrono-Legend — Cima alcanzada",
+        "streak_day_label":         "🔥 {streak} días de racha",
+        "sidebar_xp_label":         "XP",
+        "sidebar_streak_label":     "Racha",
+        "sidebar_rank_label":       "Rango",
+        "result_flawless":          "VICTORIA IMPECABLE",
+        "result_conquered":         "DIMENSIÓN CONQUISTADA",
+        "result_complete":          "PRUEBA COMPLETADA",
+        "result_correct_label":     "Correctas",
+        "result_xp_label":          "XP Ganado",
+        "xp_to_next_rank_bar":      "{remaining} XP al siguiente rango",
+
         # ── Quiz page ────────────────────────────────────────────────
         "quiz_title": "Rito de Personalización",
         "quiz_subtitle": "El Chronicler lee tu alma",
@@ -400,6 +417,23 @@ TRANSLATIONS = {
         "difficulty_Easy": "Easy",
         "difficulty_Medium": "Medium",
         "difficulty_Hard": "Hard",
+
+    # ── theme.py components ──────────────────────────────────────
+        "rank_progress":            "Rank Progress",
+        "xp_to_next":               "{xp} / {next}",
+        "max_rank_display":         "MAX",
+        "remaining_xp":             "{remaining} XP to rank up",
+        "max_rank_reached":         "Chrono-Legend — Peak reached",
+        "streak_day_label":         "🔥 {streak}-day streak",
+        "sidebar_xp_label":         "XP",
+        "sidebar_streak_label":     "Streak",
+        "sidebar_rank_label":       "Rank",
+        "result_flawless":          "FLAWLESS VICTORY",
+        "result_conquered":         "DIMENSION CONQUERED",
+        "result_complete":          "TRIAL COMPLETE",
+        "result_correct_label":     "Correct",
+        "result_xp_label":          "XP Earned",
+        "xp_to_next_rank_bar":      "{remaining} XP to next rank",
 
         # ── Quiz page ────────────────────────────────────────────────
         "quiz_title": "Personalization Rite",

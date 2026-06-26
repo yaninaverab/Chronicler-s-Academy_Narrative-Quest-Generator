@@ -11,6 +11,34 @@ Usage:
     )
 """
 
+# ── Language instruction helper ───────────────────────────────────────────────
+def _language_instruction(language: str = "es") -> str:
+    """
+    Builds the language directive injected into the Chronicler's system prompt.
+    The Chronicler ALWAYS responds in the scholar's chosen realm-language
+    (set via the language selector), regardless of what language the scholar
+    writes in. If the scholar writes in the other language, the Chronicler
+    may make a brief, in-character remark about it — but never actually
+    switches languages.
+    """
+    if language == "en":
+        return """
+LANGUAGE DIRECTIVE (critical, non-negotiable):
+- You ALWAYS respond in ENGLISH. This is the language of this realm, decreed by the scholar themself.
+- If the scholar writes to you in Spanish or any other language, you still respond in English.
+- You may briefly and good-naturedly remark on this in character — e.g. acknowledging their words arrived "in a foreign tongue" — but you never switch languages to match them.
+- Do not mix languages within a response.
+"""
+    else:  # default to "es"
+        return """
+DIRECTIVA DE IDIOMA (crítica, innegociable):
+- SIEMPRE respondes en ESPAÑOL. Este es el idioma de este reino, decretado por el propio scholar.
+- Si el scholar te escribe en inglés o cualquier otro idioma, tú igual respondes en español.
+- Puedes comentar esto brevemente y con humor, en personaje — por ejemplo notando que sus palabras llegaron "en una lengua extranjera" — pero nunca cambias de idioma para igualarlo.
+- No mezcles idiomas dentro de una misma respuesta.
+"""
+
+
 # ── Scholar context helper ────────────────────────────────────────────────────
 def _scholar_context(scholar: dict, rank_title: str = None) -> str:
     """
@@ -46,12 +74,13 @@ SCHOLAR PROFILE:
 
 
 # ── Main Chronicler system prompt ─────────────────────────────────────────────
-def build_chronicler_system_prompt(scholar: dict, rank_title: str = None) -> str:
+def build_chronicler_system_prompt(scholar: dict, rank_title: str = None, language: str = "es") -> str:
     """
     The core personality prompt for the Chronicler.
     Replace your current system prompt with this.
     """
     context = _scholar_context(scholar, rank_title)
+    language_block = _language_instruction(language)
 
     return f"""You are the Chronicler — an ancient, dry-witted keeper of knowledge who has watched civilizations rise and collapse like soufflés. You speak with the weary elegance of someone who has explained calculus to a Roman emperor and argued philosophy with a confused time-traveler from the 1800s.
 
@@ -73,7 +102,7 @@ Boundaries:
 - Stay in character at all times. If asked something outside your knowledge domain, the Chronicler admits it with dignity. ("Even I have gaps. Scandalous, I know.")
 - Never break the fourth wall about being an AI.
 - Keep responses under 200 words unless a topic genuinely demands depth.
-
+{language_block}
 {context}
 
 Remember: you know this scholar personally. Address them by name occasionally. Reference their rank. If they're on a streak, you noticed.
@@ -175,15 +204,16 @@ Give a hint. Rules:
 
 
 # ── Chat response wrapper ─────────────────────────────────────────────────────
-def build_chat_messages(scholar: dict, history: list, new_message: str, rank_title: str = None, lesson_text: str = "") -> tuple:
+def build_chat_messages(scholar: dict, history: list, new_message: str, rank_title: str = None, lesson_text: str = "", language: str = "es") -> tuple:
     """
     Builds the full messages array for a Chronicler chat API call.
     history: list of {"role": "user"|"assistant", "content": str}
              (matches st.session_state.chat_messages format)
     lesson_text: the uploaded tome content, so the Chronicler can reference it
+    language: "es" or "en" — the scholar's chosen realm-language (from st.session_state.language)
     Returns: (system_prompt, messages) ready for Groq API
     """
-    system = build_chronicler_system_prompt(scholar, rank_title)
+    system = build_chronicler_system_prompt(scholar, rank_title, language)
 
     if lesson_text:
         system += f"\n\nYou have access to this lesson tome:\n{lesson_text[:3000]}\n\nNever invent facts not present in the tome."

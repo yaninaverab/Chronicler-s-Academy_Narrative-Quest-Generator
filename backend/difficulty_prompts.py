@@ -69,11 +69,12 @@ def build_quest_prompt(student_profile: dict, lesson_text: str) -> str:
     return f"""You are an expert educational game designer.
 Your job is to transform a lesson into a personalized RPG quest for a student.
 
+
 STUDENT PROFILE:
 - Name: {student_profile['name']}
 - Favorite theme: {student_profile['theme']}
 - Difficulty: {difficulty}
-- Interests: {student_profile['interests']}
+f"- Weave the student's interests ({student_profile['interests']}) into scenario-based questions where possible.",
 
 LESSON CONTENT:
 {lesson_text}

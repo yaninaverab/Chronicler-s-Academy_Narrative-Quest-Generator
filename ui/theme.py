@@ -308,10 +308,6 @@ def page_header(title: str, subtitle: str = "", icon: str = "📜", animate: boo
 
 # ── RPG Card ──────────────────────────────────────────────────────────────────
 def rpg_card(title: str, body: str, accent: str = "arcane", footer: str = "", animate: bool = False):
-    """
-    A bordered RPG-style card.
-    accent: "arcane" (purple) | "gold" | "ember" (red) | "teal"
-    """
     colors = {
         "arcane": ("rgba(123,47,255,0.18)", "#7b2fff",  "rgba(123,47,255,0.08)"),
         "gold":   ("rgba(201,168,76,0.18)",  "#c9a84c", "rgba(201,168,76,0.06)"),
@@ -319,35 +315,36 @@ def rpg_card(title: str, body: str, accent: str = "arcane", footer: str = "", an
         "teal":   ("rgba(26,188,156,0.18)",  "#1abc9c", "rgba(26,188,156,0.06)"),
     }
     border_color, glow_color, bg_tint = colors.get(accent, colors["arcane"])
-    anim = 'animation:fade-in-up 0.4s ease forwards;' if animate else ''
-    footer_html = (
-        f'<div style="margin-top:10px;padding-top:10px;'
-        f'border-top:1px solid {border_color};'
-        f'color:#8a7050;font-size:0.76rem;">{footer}</div>'
-    ) if footer else ""
-    st.markdown(f"""
-    <div style="background:linear-gradient(135deg,#0d0a1f,#100d1c);
-                border:1px solid {border_color};border-radius:14px;
-                padding:1.2rem 1.4rem;margin:0.5rem 0;
-                position:relative;overflow:hidden;{anim}
-                box-shadow:inset 0 0 40px rgba(0,0,0,0.5),0 4px 20px rgba(0,0,0,0.3);">
-        <div style="position:absolute;inset:0;background:{bg_tint};pointer-events:none;"></div>
-        <div style="position:absolute;top:0;left:15px;right:15px;height:1px;
-                    background:linear-gradient(90deg,transparent,{glow_color}88,transparent);"></div>
-        <h3 style="font-family:'Cinzel',serif;color:#c9a84c;font-size:0.92rem;
-                   letter-spacing:0.07em;margin:0 0 8px;position:relative;">
-            {title}
-        </h3>
-        <div style="color:#e8d5b0;font-size:0.88rem;line-height:1.65;position:relative;">
-            {body}
-        </div>
-        {footer_html}
-        <div style="position:absolute;bottom:0;left:15px;right:15px;height:1px;
-                    background:linear-gradient(90deg,transparent,{glow_color}55,transparent);"></div>
-    </div>
-    """, unsafe_allow_html=True)
+    anim = "animation:fade-in-up 0.4s ease forwards;" if animate else ""
 
+    footer_html = ""
+    if footer:
+        footer_html = (
+            f'<div style="margin-top:10px;padding-top:10px;'
+            f'border-top:1px solid {border_color};'
+            f'color:#8a7050;font-size:0.76rem;">{footer}</div>'
+        )
 
+    html = (
+        f'<div style="background:linear-gradient(135deg,#0d0a1f,#100d1c);'
+        f'border:1px solid {border_color};border-radius:14px;'
+        f'padding:1.2rem 1.4rem;margin:0.5rem 0;'
+        f'position:relative;overflow:hidden;{anim}'
+        f'box-shadow:inset 0 0 40px rgba(0,0,0,0.5),0 4px 20px rgba(0,0,0,0.3);">'
+        f'<div style="position:absolute;inset:0;background:{bg_tint};pointer-events:none;"></div>'
+        f'<div style="position:absolute;top:0;left:15px;right:15px;height:1px;'
+        f'background:linear-gradient(90deg,transparent,{glow_color}88,transparent);"></div>'
+        f'<h3 style="font-family:Cinzel,serif;color:#c9a84c;font-size:0.92rem;'
+        f'letter-spacing:0.07em;margin:0 0 8px;position:relative;">{title}</h3>'
+        f'<div style="color:#e8d5b0;font-size:0.88rem;line-height:1.65;position:relative;">{body}</div>'
+        f'{footer_html}'
+        f'<div style="position:absolute;bottom:0;left:15px;right:15px;height:1px;'
+        f'background:linear-gradient(90deg,transparent,{glow_color}55,transparent);"></div>'
+        f'</div>'
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
+    
 # ── Scholar Hero Card ─────────────────────────────────────────────────────────
 def scholar_hero_card(scholar: dict, rank_info: dict, next_xp: int):
     """Large hero card shown on the academy dashboard."""
@@ -568,6 +565,10 @@ def notification_toast(message: str, kind: str = "info"):
 # ── Challenge Arena Card ──────────────────────────────────────────────────────
 def challenge_arena(question: str, trial_num: int, total: int):
     """Dramatic challenge header for the quiz page."""
+    from backend.translations import t
+
+    trial_label = t("trial_of", current=trial_num, total=total)
+
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,#08051a,#110c24,#08051a);
                 border:1px solid rgba(123,47,255,0.35);border-radius:16px;
@@ -581,7 +582,7 @@ def challenge_arena(question: str, trial_num: int, total: int):
                     margin-bottom:1rem;">
             <div style="font-family:'Cinzel',serif;color:#7b2fff;font-size:0.72rem;
                         letter-spacing:0.15em;text-transform:uppercase;">
-                ⚔ Trial {trial_num} of {total}
+                {trial_label}
             </div>
             <div style="display:flex;gap:6px;">
                 {"".join(f'<div style="width:22px;height:4px;border-radius:2px;background:{"#7b2fff" if i < trial_num else "#1e1640"};box-shadow:{"0 0 8px #7b2fff88" if i < trial_num else "none"};"></div>' for i in range(total))}
@@ -595,7 +596,6 @@ def challenge_arena(question: str, trial_num: int, total: int):
                     background:linear-gradient(90deg,transparent,rgba(123,47,255,0.3),transparent);"></div>
     </div>
     """, unsafe_allow_html=True)
-
 
 # ── Sidebar Scholar Panel ─────────────────────────────────────────────────────
 def sidebar_scholar_panel(scholar: dict, rank_info: dict):

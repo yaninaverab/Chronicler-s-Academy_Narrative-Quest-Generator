@@ -2,7 +2,7 @@ from groq import Groq
 import json
 import os
 from dotenv import load_dotenv
-from backend.fallback_quest import FALLBACK_QUEST
+from backend.fallback_quest import get_fallback_quest
 from backend.difficulty_prompts import build_quest_prompt
 
 load_dotenv()
@@ -41,11 +41,11 @@ def generate_quest(student_profile: dict, lesson_text: str) -> dict:
             return quest_data
         except json.JSONDecodeError:
             print("AI returned invalid JSON — using fallback quest")
-            return FALLBACK_QUEST
+            return get_fallback_quest()
 
     except Exception as e:
         print(f"Quest generation failed: {e} — using fallback quest")
-        return FALLBACK_QUEST
+        return get_fallback_quest()
 
 def validate_quest(quest: dict) -> bool:
     """

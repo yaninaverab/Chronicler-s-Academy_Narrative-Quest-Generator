@@ -83,28 +83,27 @@ The app will open at `http://localhost:8501`
 
 ```
 chroniclers-academy/
-├── app.py                          # Main Streamlit app — all pages & routing
+├── app.py                          # Main Streamlit app, contains all pages & routing
 ├── backend/
 │   ├── database.py                 # SQLite schema, queries, XP/rank logic
-│   ├── quest_generator.py          # Groq quest generation + fallback
+│   ├── quest_generator.py          # Groq quest generation & fallback quest
 │   ├── difficulty_prompts.py       # Difficulty-aware prompt builder (Bloom's Taxonomy)
 │   ├── chronicler_prompts.py       # Chronicler personality, chat & language directive
 │   ├── streak_manager.py           # Streak logic (increment/freeze/reset)
-│   ├── streak_migration.py         # DB migration + streak persistence
+│   ├── streak_migration.py         # DB migration & streak persistence
 │   ├── translations.py             # EN/ES UI string dictionary + theme/difficulty/quiz mapping
 │   ├── vision_extractor.py         # PDF vision extraction via Groq
 │   └── fallback_quest.py           # Hardcoded fallback quest
 ├── ui/
-│   ├── theme.py                    # Dark RPG CSS theme + component builders
+│   ├── theme.py                    # Dark RPG CSS theme & component builders
 │   ├── streak_ui.py                # Streak panel, badge, milestone road
 │   ├── language_selector.py        # Top-right EN/ES toggle on login
 │   └── difficulty_toggle.py        # Per-quest difficulty override selector
 ├── data/
-│   └── scholars.db                 # SQLite database (git-ignored)
+│   └── scholars.db                 # SQLite database 
 ├── .streamlit/
 │   └── config.toml                 # Streamlit dark theme config
-├── .env                            # API keys (git-ignored)
-├── .env.example                    # Template for environment variables
+├── example.env                     # Template for environment variables
 ├── .gitignore
 ├── requirements.txt
 └── README.md

@@ -5,7 +5,7 @@ venv/
 .env
 
 # Database of user data
-data/scholars.db
+data/*.db
 
 # Python cache
 __pycache__/

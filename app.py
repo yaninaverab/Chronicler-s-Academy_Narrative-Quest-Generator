@@ -11,7 +11,6 @@ from backend.database import (
     save_message, get_chat_history
 )
 from backend.streak_migration import apply_streak_migration
-apply_streak_migration()
 from backend.quest_generator import generate_quest, validate_quest
 from ui.streak_ui import handle_login_streak, render_streak_panel, render_streak_badge
 from backend.chronicler_prompts import build_chat_messages
@@ -30,6 +29,11 @@ from ui.difficulty_toggle import render_difficulty_toggle
 
 load_dotenv()
 
+# ── Init ──────────────────────────────────────────────────────
+init_db()
+
+apply_streak_migration()
+
 # ── App config ────────────────────────────────────────────────
 st.set_page_config(
     page_title="The Chronicler's Academy",
@@ -40,9 +44,6 @@ st.set_page_config(
 
 inject_theme()
 ambient_bg()
-
-# ── Init ──────────────────────────────────────────────────────
-init_db()
 
 # ── Session state ─────────────────────────────────────────────
 defaults = {

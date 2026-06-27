@@ -214,7 +214,7 @@ TRANSLATIONS = {
         "quiz_q4": "Tu arquetipo de héroe es:",
         "quiz_q4_opt1": "🧙 Mago sabio",
         "quiz_q4_opt2": "🗡️ Guerrero valiente",
-        "quiz_q4_opt3": "🕵️ Pícaro astuto",
+        "quiz_q4_opt3": "🕵️ Rebelde astuto",
         "quiz_q4_opt4": "💚 Sanador de apoyo",
         "btn_seal_path": "📜 Sellar mi Camino",
 

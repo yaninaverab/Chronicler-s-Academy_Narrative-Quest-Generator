@@ -60,9 +60,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # 4. Set up your environment variables
+
+# Windows:
+copy .env.example .env
+
+# macOS/Linux:
 cp .env.example .env
-# Then edit .env and add your GROQ_API_KEY
-```
+
+# Then open .env and replace "your_api_key_here!!!" with your actual GROQ_API_KEY
 
 ### Running the app
 

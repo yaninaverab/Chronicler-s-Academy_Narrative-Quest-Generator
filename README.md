@@ -231,10 +231,5 @@ Key dependencies:
 
 ---
 
-## 📄 License
-
-MIT License — feel free to fork, extend, and build your own Academy.
-
----
 
 *Built with 🔮 and a lot of Groq API calls.*

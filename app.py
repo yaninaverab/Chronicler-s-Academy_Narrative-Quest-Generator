@@ -1,6 +1,9 @@
 import streamlit as st
 import json
 import time
+from groq import Groq
+import os
+from dotenv import load_dotenv
 from backend.database import (
     init_db, create_scholar, get_scholar, name_exists,
     add_xp, get_rank_info, get_xp_for_next_rank,
@@ -23,6 +26,9 @@ from backend.translations import (
     t, translated_theme_options, translated_difficulty_options,
     theme_display_to_english, difficulty_display_to_english,
 )
+from ui.difficulty_toggle import render_difficulty_toggle 
+
+load_dotenv()
 
 # ── App config ────────────────────────────────────────────────
 st.set_page_config(
@@ -319,8 +325,10 @@ def page_upload():
             st.session_state.pdf_name = t("manual_inscription")
 
     rune_divider()
-
+    
     if st.session_state.lesson_text:
+        render_difficulty_toggle(scholar)
+        
         col1, col2 = st.columns(2)
         with col1:
             if st.button(t("btn_consult_chronicler_alt"),
@@ -360,10 +368,6 @@ def page_chronicler():
     if user_input:
         st.session_state.chat_messages.append({"role": "user", "content": user_input})
 
-        from groq import Groq
-        import os
-        from dotenv import load_dotenv
-        load_dotenv()
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
         current_language = st.session_state.get("language", "es")
@@ -388,6 +392,7 @@ def page_chronicler():
         st.rerun()
 
     rune_divider()
+    render_difficulty_toggle(scholar)
     col1, col2 = st.columns(2)
     with col1:
         if st.button(t("btn_generate_quest_alt"),
@@ -419,7 +424,7 @@ def page_generating():
             profile = {
                 "name":       scholar["name"],
                 "theme":      scholar["theme"],
-                "difficulty": scholar["difficulty"],
+                "difficulty": st.session_state.get("selected_difficulty", scholar["difficulty"]),
                 "interests":  scholar["interests"],
             }
             quest = generate_quest(profile, st.session_state.lesson_text)

@@ -89,6 +89,8 @@ TRANSLATIONS = {
         "btn_generate_quest": "⚔️ Generar Misión",
         "btn_back_academy": "🏛️ Volver a la Academia",
         "upload_or_inscribe_prompt": "Sube un tomo o inscribe texto para continuar.",
+        "difficulty_override_label": "⚡ Dificultad para esta misión",  
+
 
         # ── Chronicler page ─────────────────────────────────────────
         "chronicler_title": "🧙 El Chronicler Habla",
@@ -331,6 +333,7 @@ TRANSLATIONS = {
         "btn_generate_quest": "⚔️ Generate Quest",
         "btn_back_academy": "🏛️ Back to Academy",
         "upload_or_inscribe_prompt": "Upload a tome or inscribe text to continue.",
+        "difficulty_override_label": "⚡ Difficulty for this quest",   
 
         # ── Chronicler page ─────────────────────────────────────────
         "chronicler_title": "🧙 The Chronicler Speaks",

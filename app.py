@@ -427,6 +427,7 @@ def page_generating():
                 "theme":      scholar["theme"],
                 "difficulty": st.session_state.get("selected_difficulty", scholar["difficulty"]),
                 "interests":  scholar["interests"],
+                "language":   st.session_state.get("language", "es"),
             }
             quest = generate_quest(profile, st.session_state.lesson_text)
 

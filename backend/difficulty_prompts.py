@@ -61,6 +61,8 @@ def build_quest_prompt(student_profile: dict, lesson_text: str) -> str:
     """
     difficulty = student_profile.get("difficulty", "Medium")
     cfg = DIFFICULTY_CONFIG.get(difficulty, DIFFICULTY_CONFIG["Medium"])
+    language = student_profile.get("language", "es")
+    lang_name = "Spanish" if language == "es" else "English"
 
     rules_block = "\n".join(f"- {r}" for r in cfg["question_rules"])
     bloom_block = ", ".join(cfg["bloom_levels"])
@@ -84,6 +86,10 @@ DIFFICULTY TARGET: {difficulty} (Bloom's levels: {bloom_block})
 CHALLENGE RULES — follow strictly for {difficulty} difficulty:
 {rules_block}
 - {cfg['wrong_answer_rule']}
+
+f"LANGUAGE DIRECTIVE: Generate ALL content in {lang_name}. "
+f"This includes quest title, story, NPC names, questions, answer options, hints, and feedback. "
+f"No exceptions.\n\n"
 
 INSTRUCTIONS:
 - Create an RPG quest that teaches the EXACT concepts from the lesson

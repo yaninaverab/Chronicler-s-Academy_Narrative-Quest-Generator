@@ -2,20 +2,22 @@
 
 > *Where knowledge becomes legend.*
 
-An AI-powered RPG learning app that transforms your notes and PDFs into personalized quests, challenges, and XP progression. Built with Streamlit and powered by Groq's LLaMA models.
+An AI-powered RPG learning app that transforms your notes and PDFs into personalized quests, challenges, and XP progression. Built with Streamlit and powered by Groq's LLaMA models. Fully bilingual — English and Spanish.
 
 ---
 
 ## ✨ Features
 
 - **📜 Quest Generation** — Upload a PDF or paste your notes and the AI generates a fully personalized RPG quest based on your content
-- **🧙 The Chronicler** — An ancient, sardonic AI mentor who answers questions about your material before you embark on your quest
-- **⚔️ Challenge System** — Multiple-choice trials pulled directly from your lesson content, difficulty-scaled to your level
+- **🧙 The Chronicler** — An ancient, sardonic AI mentor who answers questions about your material before you embark on your quest, always responding in your chosen language
+- **⚔️ Challenge System** — Multiple-choice trials pulled directly from your lesson content, difficulty-scaled to your level using Bloom's Taxonomy
+- **🎚️ Per-Quest Difficulty Override** — Change the difficulty for your next quest at any time (upload or chat screen) without altering your permanent profile preference
 - **⚡ XP & Rank Progression** — Earn XP for completing quests, correct answers, no-hint runs, and perfect scores. Rank up from Apprentice to Chrono-Legend
 - **🔥 Daily Streak System** — Login streaks with grace periods, milestone badges (Ember Keeper → Week Warden → Fortnight Forged → Eternal Chronicler), and XP bonuses
-- **📚 Academy Archive** — Full history of every dimension (quest) you've completed
+- **📚 Academy Archive** — Full history of every dimension (quest) you've completed, with aggregate stats
 - **🎯 Personalization Quiz** — Scholar profile built from your theme, interests, play style, and hero type — the Chronicler and quests adapt to you
-- **🌑 Dark RPG Theme** — Void black, arcane violet, and rune gold visual identity
+- **🌐 Bilingual (EN/ES)** — Full UI translation with a language selector on login; the Chronicler always replies in your chosen language, regardless of what language you write in
+- **🌑 Dark RPG Theme** — Void black, arcane violet, and rune gold visual identity with animated cards, glowing borders, and a persistent sidebar
 
 ---
 
@@ -80,15 +82,18 @@ chroniclers-academy/
 ├── backend/
 │   ├── database.py                 # SQLite schema, queries, XP/rank logic
 │   ├── quest_generator.py          # Groq quest generation + fallback
-│   ├── difficulty_prompts.py       # Difficulty-aware prompt builder
-│   ├── chronicler_prompts.py       # Chronicler personality & chat prompts
+│   ├── difficulty_prompts.py       # Difficulty-aware prompt builder (Bloom's Taxonomy)
+│   ├── chronicler_prompts.py       # Chronicler personality, chat & language directive
 │   ├── streak_manager.py           # Streak logic (increment/freeze/reset)
 │   ├── streak_migration.py         # DB migration + streak persistence
+│   ├── translations.py             # EN/ES UI string dictionary + theme/difficulty/quiz mapping
 │   ├── vision_extractor.py         # PDF vision extraction via Groq
 │   └── fallback_quest.py           # Hardcoded fallback quest
 ├── ui/
 │   ├── theme.py                    # Dark RPG CSS theme + component builders
-│   └── streak_ui.py                # Streak panel, badge, milestone road
+│   ├── streak_ui.py                # Streak panel, badge, milestone road
+│   ├── language_selector.py        # Top-right EN/ES toggle on login
+│   └── difficulty_toggle.py        # Per-quest difficulty override selector
 ├── data/
 │   └── scholars.db                 # SQLite database (git-ignored)
 ├── .streamlit/
@@ -104,14 +109,25 @@ chroniclers-academy/
 
 ## 🎮 Demo Flow
 
-1. **Create a Scholar** — choose your name, PIN, theme, difficulty, and interests
-2. **Complete the Quiz** — optional personalization for deeper customization
-3. **Upload content** — PDF or pasted text (lecture notes, textbook chapters, anything)
-4. **Consult The Chronicler** — ask questions about your material before the quest
-5. **Generate a Quest** — AI builds a personalized RPG quest from your content
-6. **Complete Challenges** — answer questions, use hints, earn XP
-7. **Rank Up** — watch your XP bar fill and your rank climb
-8. **Check the Archive** — review every dimension you've conquered
+1. **Choose your language** — EN/ES selector, top-right corner of the login screen
+2. **Create a Scholar** — choose your name, PIN, theme, difficulty, and interests
+3. **Complete the Quiz** — optional personalization for deeper customization
+4. **Upload content** — PDF or pasted text (lecture notes, textbook chapters, anything)
+5. **(Optional) Adjust difficulty** — override the difficulty just for this quest
+6. **Consult The Chronicler** — ask questions about your material before the quest, in your language
+7. **Generate a Quest** — AI builds a personalized RPG quest from your content
+8. **Complete Challenges** — answer questions, use hints, earn XP
+9. **Rank Up** — watch your XP bar fill and your rank climb
+10. **Check the Archive** — review every dimension you've conquered
+
+---
+
+## 🌐 Internationalization
+
+- Full UI is available in **English** and **Spanish**, toggled via a selector on the login page
+- `theme`, `difficulty`, and quiz answers are **displayed translated** but always **stored in English** in the database — this keeps Groq prompts consistent regardless of the scholar's UI language
+- The Chronicler always responds in the scholar's chosen language. If the scholar writes in the other language, the Chronicler may make a brief in-character remark about it, but never switches languages
+- All translation strings live in `backend/translations.py`, accessed via the `t(key, **kwargs)` helper
 
 ---
 
@@ -139,6 +155,20 @@ chroniclers-academy/
 
 ---
 
+## 🎚️ Difficulty System
+
+Each difficulty level maps to specific Bloom's Taxonomy levels, not just a label:
+
+| Difficulty | Bloom's Levels | Challenges | Behavior |
+|---|---|---|---|
+| Easy | Remember · Understand | 3 | Clear recall questions, obviously-wrong distractors |
+| Medium | Apply · Analyze | 4 | Requires applying concepts, subtler distractors |
+| Hard | Evaluate · Synthesize | 5 | Critical thinking required, no "all of the above" |
+
+Scholars can override their default difficulty for a single quest from the Upload or Chronicler screen, without changing their permanent profile preference.
+
+---
+
 ## 🔥 Streak Milestones
 
 | Streak | Badge | Bonus XP |
@@ -155,8 +185,7 @@ chroniclers-academy/
 ## 🗺️ Roadmap
 
 ### In Progress
-- [ ] Additional Languages Options, Spanish being the priority
-- [ ] Visual polish pass — CSS class system, sidebar nav, mockup parity
+- [ ] Deeper UI polish pass — CSS class system, sidebar nav refinements
 
 ### Planned (v2)
 - [ ] Class system with perks
@@ -166,6 +195,14 @@ chroniclers-academy/
 - [ ] Armor system
 - [ ] Character sprites (Ren'Py or React)
 - [ ] Multiplayer leaderboard
+
+### Completed
+- [x] Daily login streak system with grace period
+- [x] Chronicler personality & summary prompts
+- [x] Difficulty-aware quest generation (Bloom's Taxonomy)
+- [x] Dark RPG visual theme
+- [x] Bilingual UI (English / Spanish)
+- [x] Per-quest difficulty override
 
 ---
 
